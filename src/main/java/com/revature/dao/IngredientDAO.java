@@ -1,5 +1,7 @@
 package com.revature.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ public class IngredientDAO {
      * @param connectionUtil the utility used to connect to the database
      */
     public IngredientDAO(ConnectionUtil connectionUtil) {
-        
+        this.connectionUtil = connectionUtil;
     }
 
     /**
@@ -43,6 +45,19 @@ public class IngredientDAO {
      * @return the Ingredient object with the specified id.
      */
     public Ingredient getIngredientById(int id) {
+        String sql = "SELECT * FROM INGREDIENT WHERE id = ?";
+        try(
+            Connection conn = connectionUtil.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+        ){
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                return mapSingleRow(rs);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -53,6 +68,21 @@ public class IngredientDAO {
      * @return the unique identifier of the created Ingredient.
      */
     public int createIngredient(Ingredient ingredient) {
+        String sql = "INSERT INTO INGREDIENT(id,name) VALUES(?,?)";
+        try(
+            Connection conn = connectionUtil.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+        ){
+            ps.setInt(1, ingredient.getId());
+            ps.setString(2, ingredient.getName());
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                return ingredient.getId();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         return 0;
     }
 
@@ -62,6 +92,15 @@ public class IngredientDAO {
      * @param ingredient the Ingredient object to be deleted.
      */
     public void deleteIngredient(Ingredient ingredient) {
+         String sql = "DELETE FROM INGREDIENT WHERE ID = ?";
+        try (Connection conn = connectionUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, ingredient.getId());
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         
     }
 

@@ -5,8 +5,11 @@ import com.revature.util.PageOptions;
 import com.revature.model.Chef;
 import java.util.List;
 import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 
 /**
@@ -31,7 +34,7 @@ public class ChefDAO {
      * @param connectionUtil the utility used to connect to the database
      */
     public ChefDAO(ConnectionUtil connectionUtil) {
-        
+        this.connectionUtil = connectionUtil;   
     }
 
     /**
@@ -40,7 +43,21 @@ public class ChefDAO {
      * @return a list of all Chef objects
      */
     public List<Chef> getAllChefs() {
-        return null;
+        List<Chef> chefs = new ArrayList<>();
+        String sql = "SELECT * FROM CHEF ORDER BY id";
+        try(
+            Connection conn = connectionUtil.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+        ){
+            while(rs.next()){
+                chefs.add(mapSingleRow(rs));
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            return null;
+        }
+        return chefs;
     }
 
     /**
@@ -50,6 +67,16 @@ public class ChefDAO {
      * @return a paginated list of Chef objects
      */
     public Page<Chef> getAllChefs(PageOptions pageOptions) {
+        String sql = "SELECT * FROM CHEF ORDER BY id";
+        try(
+            Connection conn = connectionUtil.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+        ){
+            return pageResults(rs, pageOptions);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -60,7 +87,23 @@ public class ChefDAO {
      * @return the Chef object, if found.
      */
     public Chef getChefById(int id) {
+        String sql = "SELECT * FROM CHEF WHERE id = ?";
+        try(
+            Connection conn = connectionUtil.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+        ){
+           ps.setInt(1,id);
+           ResultSet rs = ps.executeQuery();
+           
+           if (rs.next()){
+            return mapSingleRow(rs);
+           }
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         return null;
+
     }
 
     /**
@@ -70,6 +113,26 @@ public class ChefDAO {
      * @return the unique identifier of the created Chef.
      */
     public int createChef(Chef chef) {
+        String sql = "INSERT INTO CHEF(id,username,email,password,is_Admin) VALUES(?,?,?,?,?) ";
+        try(
+            Connection conn = connectionUtil.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+
+        ){
+            ps.setInt(1, chef.getId());
+            ps.setString(2, chef.getUsername());
+            ps.setString(3, chef.getEmail());
+            ps.setString(4, chef.getPassword());
+            ps.setBoolean(5, chef.isAdmin());
+
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                return chef.getId();
+            }
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         return 0;
     }
 
@@ -79,6 +142,20 @@ public class ChefDAO {
      * @param chef the Chef object containing updated information.
      */
     public void updateChef(Chef chef) {
+        String sql = "UPDATE CHEF SET username = ?, email = ?, password = ?, is_admin = ? WHERE id = ?";
+        try(
+            Connection conn=connectionUtil.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+        ){
+            ps.setString(1, chef.getUsername());
+            ps.setString(2, chef.getEmail());
+            ps.setString(3, chef.getPassword());
+            ps.setBoolean(4, chef.isAdmin());
+            ps.setInt(5, chef.getId());
+            ps.executeUpdate();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         
     }
 
@@ -88,7 +165,18 @@ public class ChefDAO {
      * @param chef the Chef object to be deleted.
      */
     public void deleteChef(Chef chef) {
-        
+        String sql = "DELETE FROM CHEF WHERE id = ?";
+        try(
+            Connection conn = connectionUtil.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+           
+        ){
+            
+            ps.setInt(1, chef.getId());
+            ps.executeUpdate();
+        }catch(Exception e){
+            e.printStackTrace();
+        }   
     }
 
     /**
