@@ -1,7 +1,10 @@
 package com.revature.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +50,9 @@ public class RecipeDAO {
      * @param connectionUtil - the utility used to connect to the database
 	 */
 	public RecipeDAO(ChefDAO chefDAO, IngredientDAO ingredientDAO, ConnectionUtil connectionUtil) {
-		
+		this.chefDAO = chefDAO;
+		this.ingredientDAO = ingredientDAO;
+		this.connectionUtil = connectionUtil;
 	}
 
     /**
@@ -57,8 +62,20 @@ public class RecipeDAO {
      */
 
     public List<Recipe> getAllRecipes() {
-        return(null);
-    }
+        List<Recipe> recipes = new ArrayList<>();
+		String sql = "SELECT * FROM RECIPE ORDER BY id";
+		try (Connection conn = connectionUtil.getConnection();
+			 Statement stmt = conn.createStatement();
+			 ResultSet rs = stmt.executeQuery(sql)) {
+			while(rs.next()){
+				recipes.add(mapSingleRow(rs));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return recipes;
+	}
+    
 
     /**
      * TODO: Retrieves a paginated list of all recipes from the database.
@@ -67,8 +84,19 @@ public class RecipeDAO {
      * @return a paginated list of Recipe objects
      */
     public Page<Recipe> getAllRecipes(PageOptions pageOptions) {
+        String sql = "SELECT * FROM RECIPE ORDER BY id";
+        try(
+            Connection conn = connectionUtil.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+        ){
+            return pageResults(rs, pageOptions);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         return null;
     }
+
 
     /**
      * TODO: Searches for recipes that match a specified term.
@@ -78,8 +106,20 @@ public class RecipeDAO {
      */
 
     public List<Recipe> searchRecipesByTerm(String term) {
-        return null;
-    }
+		String sql = "SELECT * FROM RECIPE WHERE name LIKE ?";
+		try (Connection conn = connectionUtil.getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql)) 
+			{
+
+			ps.setString(1, "%" + term + "%");
+			ResultSet rs = ps.executeQuery();
+			return mapRows(rs);
+			} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+    
 
     /**
      * TODO: Searches for recipes that match a specified term and returns a paginated result.
@@ -90,6 +130,17 @@ public class RecipeDAO {
      */
 
     public Page<Recipe> searchRecipesByTerm(String term, PageOptions pageOptions) {
+		String sql = "SELECT * FROM RECIPE WHERE name LIKE ? ORDER BY id";
+		try (Connection conn = connectionUtil.getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+			ps.setString(1, "%" + term + "%");
+			ResultSet rs = ps.executeQuery();
+			return pageResults(rs, pageOptions);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
         return null;
     }
 
@@ -100,7 +151,18 @@ public class RecipeDAO {
      * @return the Recipe object corresponding to the given ID
      */
 
-    public Recipe getRecipeById(int id) {
+    public Recipe getRecipeById(int id) {String sql = "SELECT * FROM RECIPE WHERE id = ?";
+		try (Connection conn = connectionUtil.getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql)) 
+			 {
+				ps.setInt(1, id);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				return mapSingleRow(rs);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
         return null;
     }
         
@@ -113,7 +175,24 @@ public class RecipeDAO {
      */
 
     public int createRecipe(Recipe recipe) {
-        return(0);
+		String sql = "INSERT INTO RECIPE(name, instructions, chef_id) VALUES(?,?,?)";
+		try (Connection conn = connectionUtil.getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+			ps.setString(1, recipe.getName());
+			ps.setString(2, recipe.getInstructions());
+			ps.setInt(3, recipe.getAuthor().getId());
+
+			ps.executeUpdate();
+			ResultSet rs = ps.getGeneratedKeys();
+			if (rs.next()) {
+				return rs.getInt(1);
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return 0;
     }
 
     /**
@@ -123,6 +202,18 @@ public class RecipeDAO {
      */
 
     public void updateRecipe(Recipe recipe) {
+		String sql = "UPDATE RECIPE SET instructions = ?, chef_id = ? WHERE id = ?";
+		try (Connection conn = connectionUtil.getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+			ps.setString(1, recipe.getInstructions());
+			ps.setInt(2, recipe.getAuthor().getId());
+			ps.setInt(3, recipe.getId());
+			ps.executeUpdate();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
         
     }
 
@@ -133,6 +224,21 @@ public class RecipeDAO {
      */
 
     public void deleteRecipe(Recipe recipe) {
+		String Sql1 = "DELETE FROM RECIPE_INGREDIENT WHERE recipe_id = ?";
+		String Sql2 = "DELETE FROM RECIPE WHERE id = ?";
+		try (Connection conn = connectionUtil.getConnection()) {
+			try (PreparedStatement ps1 = conn.prepareStatement(Sql1);
+				 PreparedStatement ps2 = conn.prepareStatement(Sql2)) {
+
+				ps1.setInt(1, recipe.getId());
+				ps1.executeUpdate();
+
+				ps2.setInt(1, recipe.getId());
+				ps2.executeUpdate();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
         
     }
 

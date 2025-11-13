@@ -9,11 +9,11 @@
 --      5. isAdmin: A boolean field to indicate if the chef has admin privileges.
 
 CREATE TABLE CHEF (
-	id int PRIMARY KEY AUTO_INCREMENT,
-	username varchar(25) UNIQUE NOT NULL,
-	email varchar(25) UNIQUE NOT NULL,
-	password varchar(255) NOT NULL,
-	isAdmin boolean 
+	id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(25) UNIQUE NOT NULL,
+    email VARCHAR(25) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    is_admin BOOLEAN
 );
 
 
@@ -26,10 +26,11 @@ CREATE TABLE CHEF (
 --      3. instructions: A non-nullable varchar field to store the recipe's instructions.
 --      4. chef_id: A foreign key that references the 'id' field from the Chef table. Ensure that referential integrity is maintained by cascading deletions.
 CREATE TABLE RECIPE (
-	id int PRIMARY KEY AUTO_INCREMENT,
-	name varchar(255) UNIQUE NOT NULL,
-	instructions varchar(25) NOT NULL,
-	chef_id int FOREIGN KEY references CHEF(id) ON DELETE CASCADE
+	id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    instructions VARCHAR(255) NOT NULL,
+    chef_id INT,
+    FOREIGN KEY (chef_id) REFERENCES CHEF(id) ON DELETE CASCADE
 	
 );
 
@@ -39,8 +40,8 @@ CREATE TABLE RECIPE (
 --      1. id: An auto-incremented primary key to uniquely identify each ingredient.
 --      2. name: A unique and non-nullable varchar field (max 20 characters) to store the ingredient's name.
 CREATE TABLE INGREDIENT (
-	id int AUTO_INCREMENT PRIMARY KEY,
-	name varchar(20) UNIQUE NOT NULL,
+	 id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(20) UNIQUE NOT NULL
 );
 
 -- Recipe_Ingredient Table
@@ -54,13 +55,14 @@ CREATE TABLE INGREDIENT (
 -- 5. unit: A non-nullable varchar field (max 20 characters) to store the unit of the volume.
 -- 6. is_metric: A boolean field to indicate if the unit is in metric. Defaults to false.
 CREATE TABLE RECIPE_INGREDIENT (
-	id int PRIMARY KEY AUTO_INCREMENT,
-	recipe_id int NOT NULL FOREIGN KEY references RECIPE(id),
-	ingredient_id int NOT NULL FOREIGN KEY references INGREDIENT(id),
-	vol decimal(20,2),
-	unit varchar(20) NOT NULL,
-	is_metric boolean
-
+	 id INT PRIMARY KEY AUTO_INCREMENT,
+    recipe_id INT NOT NULL,
+    ingredient_id INT NOT NULL,
+    vol DECIMAL(20,2),
+    unit VARCHAR(20) NOT NULL,
+    is_metric BOOLEAN,
+    FOREIGN KEY (recipe_id) REFERENCES RECIPE(id),
+    FOREIGN KEY (ingredient_id) REFERENCES INGREDIENT(id)
 );
 
 -- DO NOT EDIT ANY CODE BELOW THIS LINE!

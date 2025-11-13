@@ -113,21 +113,21 @@ public class ChefDAO {
      * @return the unique identifier of the created Chef.
      */
     public int createChef(Chef chef) {
-        String sql = "INSERT INTO CHEF(id,username,email,password,is_Admin) VALUES(?,?,?,?,?) ";
+        String sql = "INSERT INTO CHEF(username,email,password,is_Admin) VALUES(?,?,?,?) ";
         try(
             Connection conn = connectionUtil.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql)
+            PreparedStatement ps = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)
 
         ){
-            ps.setInt(1, chef.getId());
-            ps.setString(2, chef.getUsername());
-            ps.setString(3, chef.getEmail());
-            ps.setString(4, chef.getPassword());
-            ps.setBoolean(5, chef.isAdmin());
+            ps.setString(1, chef.getUsername());
+            ps.setString(2, chef.getEmail());
+            ps.setString(3, chef.getPassword());
+            ps.setBoolean(4, chef.isAdmin());
 
-            ResultSet rs = ps.executeQuery();
+            ps.executeUpdate();
+            ResultSet rs = ps.getGeneratedKeys();
             if(rs.next()){
-                return chef.getId();
+                return rs.getInt(1);
             }
 
         }catch(Exception e){
@@ -186,8 +186,19 @@ public class ChefDAO {
      * @return a list of Chef objects that match the search term.
      */
     public List<Chef> searchChefsByTerm(String term) {
-        return null;
+        String sql = "SELECT * FROM CHEF WHERE username LIKE ?";
+        try (Connection conn = connectionUtil.getConnection();
+        PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, "%" + term + "%");
+        ResultSet rs = ps.executeQuery();
+        return mapRows(rs);
+
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+
+    return null;
+}
 
     /**
      * TODO: Searches for chefs based on a specified term and returns a paginated result.
