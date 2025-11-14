@@ -229,7 +229,6 @@ public class RecipeDAO {
 		try (Connection conn = connectionUtil.getConnection()) {
 			try (PreparedStatement ps1 = conn.prepareStatement(Sql1);
 				 PreparedStatement ps2 = conn.prepareStatement(Sql2)) {
-
 				ps1.setInt(1, recipe.getId());
 				ps1.executeUpdate();
 

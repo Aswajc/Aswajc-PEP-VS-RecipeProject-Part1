@@ -30,6 +30,8 @@ public class RecipeController {
      * * @param authService the service used to manage authentication-related operations
      */
     public RecipeController(RecipeService recipeService, AuthenticationService authService) {
+        this.recipeService = recipeService;
+        this.authService = authService;
         
     }
 

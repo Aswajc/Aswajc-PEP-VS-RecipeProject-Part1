@@ -170,8 +170,7 @@ public class ChefDAO {
             Connection conn = connectionUtil.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
            
-        ){
-            
+        ){       
             ps.setInt(1, chef.getId());
             ps.executeUpdate();
         }catch(Exception e){
@@ -192,7 +191,6 @@ public class ChefDAO {
         ps.setString(1, "%" + term + "%");
         ResultSet rs = ps.executeQuery();
         return mapRows(rs);
-
     } catch (Exception e) {
         e.printStackTrace();
     }
@@ -208,6 +206,22 @@ public class ChefDAO {
      * @return a paginated list of Chef objects that match the search term
      */
     public Page<Chef> searchChefsByTerm(String term, PageOptions pageOptions) {
+         String sql = "SELECT * FROM CHEF WHERE USERNAME LIKE ? OR EMAIL LIKE ? ORDER BY "
+            + pageOptions.getSortBy() + " " + pageOptions.getSortDirection();
+
+    try (
+        Connection conn = connectionUtil.getConnection();
+        PreparedStatement ps = conn.prepareStatement(sql);
+    ) {
+        ps.setString(1, "%" + term + "%");
+        ps.setString(2, "%" + term + "%");
+
+        ResultSet rs = ps.executeQuery();
+        return pageResults(rs, pageOptions);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
         return null;
     }
 
